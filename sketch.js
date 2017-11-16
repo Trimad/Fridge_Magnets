@@ -1,38 +1,57 @@
 let words;
 let wordBank = [];
 let click;
-
+let bg;
 function preload() {
   words = loadJSON("words.json");
   click = loadSound("pickup.mp3");
+  bg = loadImage("bg03.jpg");
 }
 
 function setup() {
 
   pixelDensity(1);
   createCanvas(windowWidth, windowHeight);
-  background(51);
+  background(bg);
 
-  textSize(16);
-  let lettersWide = 0;
-  let heightMultiplier = 1;
+  makeMagnets((height+width)/140);
+
+}
+
+function makeMagnets(magnetSize) {
+
+  textSize(magnetSize);
+
+  let wide = 0;
+  let tall = magnetSize * 2;
+  let xPosition = 0;
+  let yPosition = 0;
+  let yMultiplier = 1;
+  let rowCounter = 0;
 
   for (var i = 0; i < words.words.length; i++) {
-    lettersWide += words.words[i].length;
-    wordBank[i] = new Word(16 + lettersWide * 8.5, heightMultiplier * 33, lettersWide * 8 + i, 32, words.words[i]);
-    lettersWide += words.words[i].length;
-    if (lettersWide * 10 - words.words[i].length * 8 + i > width) {
-      heightMultiplier++;
-      lettersWide = 0;
 
+    if (xPosition + (words.words[i].length * magnetSize) >= width) {
+      yMultiplier++;
+      rowCounter++;
+      xPosition = 0;
     }
+
+    xPosition += words.words[i].length * magnetSize / 2;
+    yPosition = yMultiplier * tall + rowCounter-tall/2;
+    wide = words.words[i].length * magnetSize;
+
+    wordBank[i] = new Word(xPosition, yPosition, wide, tall, words.words[i]);
+
+    xPosition += words.words[i].length * magnetSize / 2 + 1;
+
   }
 
 }
 
 function draw() {
 
-  background(51);
+  background(bg);
   for (var i = 0; i < wordBank.length - 1; i++) {
 
     wordBank[i].show();
@@ -45,12 +64,9 @@ function draw() {
     }
   }
   for (var i = 0; i < wordBank.length - 1; i++) {
-
     wordBank[i].show();
     wordBank[i].dragging();
-
   }
-
 }
 
 function mousePressed() {
@@ -69,49 +85,4 @@ function mouseReleased() {
       wordBank[i].selected = false;
     }
   }
-
-}
-
-function Word(x, y, wide, tall, content) {
-
-  this.x = x;
-  this.y = y;
-  this.wide = wide;
-  this.tall = tall;
-  this.content = content;
-  this.selected = false;
-
-  this.show = function() {
-
-    fill(255);
-    rectMode(CENTER, CENTER);
-    rect(this.x, this.y, this.content.length * 16, this.tall);
-    noStroke();
-    fill(0);
-    textAlign(CENTER, CENTER);
-    text(this.content, this.x, this.y);
-
-  }
-
-  this.interact = function() {
-    click.play();
-  }
-
-  this.dragging = function() {
-
-    if (this.selected) {
-      this.x = mouseX;
-      this.y = mouseY;
-    }
-
-  }
-  this.hover = function() {
-    let d = dist(mouseX, mouseY, this.x, this.y);
-    if (d < (this.tall / 2)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
 }
